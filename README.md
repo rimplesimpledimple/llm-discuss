@@ -1,9 +1,9 @@
-# LLMs discuss
+# LLM discuss
 
 A simple program to have discussions between different LLM models about anything. 
 
 Supports:
-- OpenAI (GPT-4, GPT-3.5)
+- OpenAI
 - Anthropic (Claude)
 - Google (Gemini)
 
@@ -24,6 +24,8 @@ This is a fun experiment to see what happens when AIs talk to each other. You ca
 
 ## How to set it up
 
-1. Get the code
+1. Get the code: `git clone https://github.com/rimplesimpledimple/llm-discuss.git`
 2. Install dependencies: `go mod tidy`
-3. Run the program from the `cmd` directory: `go run .`
+3. Update `main.go` with the number of participants and the LLMs you want to use
+4. Run the program from the `cmd` directory: `go run .`
+
