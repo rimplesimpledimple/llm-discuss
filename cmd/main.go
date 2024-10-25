@@ -28,23 +28,60 @@ func main() {
 	loadEnv()
 	ctx := context.Background()
 
-	participants := []conversation.Participant{
-		conversation.NewOpenAIParticipant("User 1", "gpt-4", os.Getenv("OPENAI_API_KEY")),
-		conversation.NewClaudeParticipant("User 2", "claude-3-5-sonnet-20240620", os.Getenv("ANTHROPIC_API_KEY")),
-		conversation.NewGeminiParticipant("User 3", "gemini-1.5-flash", os.Getenv("GEMINI_API_KEY")),
+	userCount := 0
+
+	// Create participants slice with non-nil values only
+	var participants []conversation.Participant
+
+	// Add OpenAI participant if API key is set
+	if key := os.Getenv("OPENAI_API_KEY"); key != "" {
+		userCount++
+		participants = append(participants,
+			conversation.NewOpenAIParticipant("User "+fmt.Sprint(userCount), "gpt-4", key))
+	}
+
+	// Add Claude participant if API key is set
+	if key := os.Getenv("ANTHROPIC_API_KEY"); key != "" {
+		userCount++
+		participants = append(participants,
+			conversation.NewClaudeParticipant("User "+fmt.Sprint(userCount), "claude-3-5-sonnet-20240620", key))
+	}
+
+	// Add Gemini participant if API key is set
+	if key := os.Getenv("GEMINI_API_KEY"); key != "" {
+		userCount++
+		participants = append(participants,
+			conversation.NewGeminiParticipant("User "+fmt.Sprint(userCount), "gemini-1.5-flash", key))
+	}
+
+	// Add Ollama participant if host and model are set
+	if host := os.Getenv("OLLAMA_HOST"); host != "" {
+		if model := os.Getenv("OLLAMA_MODEL"); model != "" {
+			userCount++
+			participants = append(participants,
+				conversation.NewOllamaParticipant("User "+fmt.Sprint(userCount), model, host))
+		}
+	}
+
+	// Check if we have any participants
+	if len(participants) == 0 {
+		log.Fatal("No participants available. Please set at least one provider's environment variables.")
 	}
 
 	// Create a new conversation with multiple participants
 	conversation := conversation.NewConversation(participants)
 
 	// Start the conversation with an initial prompt
-	err := conversation.Start(fmt.Sprintf(initialPrompt, len(conversation.Participants)))
+	err := conversation.Start(fmt.Sprintf(initialPrompt, len(participants)))
 	if err != nil {
 		log.Fatalf("Error starting conversation: %v", err)
 	}
 
-	// Run for 5 turns
-	for i := 0; i < 5; i++ {
+	turns := 5
+	if t := os.Getenv("TURNS"); t != "" {
+		turns, _ = fmt.Sscanf(t, "%d", &turns)
+	}
+	for i := 0; i < turns; i++ {
 		if err := conversation.NextTurn(ctx); err != nil {
 			log.Printf("Error in conversation turn: %v", err)
 			break
