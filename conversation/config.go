@@ -40,6 +40,12 @@ var ModelConfigs = map[string]ModelConfig{
 		MaxTokens:     2048,
 		Temperature:   0.7,
 	},
+	"deepseek-chat": {
+		Name:          "deepseek-chat",
+		ContextWindow: 4096,
+		MaxTokens:     2048,
+		Temperature:   0.7,
+	},
 }
 
 // GetModelConfig returns the configuration for a given model

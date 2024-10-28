@@ -63,6 +63,12 @@ func main() {
 		}
 	}
 
+	if key := os.Getenv("DEEPSEEK_API_KEY"); key != "" {
+		userCount++
+		participants = append(participants,
+			conversation.NewDeepSeekParticipant("User "+fmt.Sprint(userCount), "deepseek-chat", key))
+	}
+
 	// Check if we have any participants
 	if len(participants) == 0 {
 		log.Fatal("No participants available. Please set at least one provider's environment variables.")
