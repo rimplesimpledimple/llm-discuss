@@ -9,8 +9,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
-	"github.com/sashabaranov/go-openai"
 )
 
 type DeepSeekParticipant struct {
@@ -98,12 +96,13 @@ type DeepSeekUsage struct {
 	TotalTokens           int `json:"total_tokens"`
 }
 
+type deepSeekMessagePayload struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 func (p *DeepSeekParticipant) GenerateResponse(ctx context.Context, history []Message) (string, error) {
-	type messagePayload struct {
-		Role    string `json:"role"`
-		Content string `json:"content"`
-	}
-	var messagesPayload []messagePayload
+	var messagesPayload []deepSeekMessagePayload
 	for i := range history {
 		var role string
 		if strings.Compare(strings.ToLower(history[i].From), "system") == 0 {
@@ -113,13 +112,16 @@ func (p *DeepSeekParticipant) GenerateResponse(ctx context.Context, history []Me
 		} else {
 			role = "user"
 		}
-		messagesPayload = append(messagesPayload, messagePayload{Role: role, Content: history[i].Content})
+		messagesPayload = append(messagesPayload, deepSeekMessagePayload{Role: role, Content: history[i].Content})
 	}
+
+	messagesPayload = p.manageConversation(messagesPayload)
+
 	payloadMap := map[string]interface{}{
 		"messages":          messagesPayload,
-		"model":             "deepseek-chat",
+		"model":             p.config.Name,
 		"frequency_penalty": 0,
-		"max_tokens":        2048,
+		"max_tokens":        p.config.MaxTokens,
 		"presence_penalty":  0,
 		"response_format": map[string]interface{}{
 			"type": "text",
@@ -127,7 +129,7 @@ func (p *DeepSeekParticipant) GenerateResponse(ctx context.Context, history []Me
 		"stop":           nil,
 		"stream":         false,
 		"stream_options": nil,
-		"temperature":    1,
+		"temperature":    p.config.Temperature,
 		"top_p":          1,
 		"tools":          nil,
 		"tool_choice":    "none",
@@ -166,7 +168,7 @@ func (p *DeepSeekParticipant) GenerateResponse(ctx context.Context, history []Me
 	return chatCompletion.Choices[0].Message.Content, nil
 }
 
-func (p *DeepSeekParticipant) manageConversation(messages []openai.ChatCompletionMessage) []openai.ChatCompletionMessage {
+func (p *DeepSeekParticipant) manageConversation(messages []deepSeekMessagePayload) []deepSeekMessagePayload {
 	currentTokens := p.countTokens(messages)
 	// Reserve tokens for the response
 	for currentTokens+p.config.MaxTokens > p.config.ContextWindow {
@@ -180,7 +182,7 @@ func (p *DeepSeekParticipant) manageConversation(messages []openai.ChatCompletio
 	return messages
 }
 
-func (p *DeepSeekParticipant) countTokens(messages []openai.ChatCompletionMessage) int {
+func (p *DeepSeekParticipant) countTokens(messages []deepSeekMessagePayload) int {
 	// GPT-4 and GPT-3.5 use cl100k_base tokenizer
 	// Each message has a base overhead of ~4 tokens
 	// Role names are also tokenized
