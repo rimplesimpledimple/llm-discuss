@@ -105,14 +105,16 @@ func (p *DeepSeekParticipant) GenerateResponse(ctx context.Context, history []Me
 	var messagesPayload []deepSeekMessagePayload
 	for i := range history {
 		var role string
+		content := history[i].Content
 		if strings.Compare(strings.ToLower(history[i].From), "system") == 0 {
 			role = "system"
+			content = fmt.Sprintf("You are %s. %s. Respond in format: %s: <response>", p.GetName(), content, p.GetName())
 		} else if strings.Compare(strings.ToLower(history[i].From), strings.ToLower(p.GetName())) == 0 {
 			role = "assistant"
 		} else {
 			role = "user"
 		}
-		messagesPayload = append(messagesPayload, deepSeekMessagePayload{Role: role, Content: history[i].Content})
+		messagesPayload = append(messagesPayload, deepSeekMessagePayload{Role: role, Content: content})
 	}
 
 	messagesPayload = p.manageConversation(messagesPayload)
@@ -164,7 +166,6 @@ func (p *DeepSeekParticipant) GenerateResponse(ctx context.Context, history []Me
 	if err != nil {
 		return "", fmt.Errorf("error while unrmasaling json: %w, body: %s", err, string(body))
 	}
-
 	return chatCompletion.Choices[0].Message.Content, nil
 }
 

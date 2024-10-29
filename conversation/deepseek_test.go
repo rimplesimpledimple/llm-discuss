@@ -24,4 +24,6 @@ func TestDeepSeekParticipant(t *testing.T) {
 	if resp == "" {
 		t.Fatal("Expected a response, but got empty response")
 	}
+
+	t.Logf("Got reponse: %s\n", resp)
 }
