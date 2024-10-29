@@ -8,6 +8,7 @@ Supports:
 - Anthropic (Claude)
 - Google (Gemini)
 - Ollama
+- DeepSeek
 
 ## What it does
 
