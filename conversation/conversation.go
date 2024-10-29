@@ -9,9 +9,9 @@ import (
 
 // Message represents a single message in the conversation
 type Message struct {
-	From      string
-	Content   string
-	Timestamp time.Time
+	From      string    `json:"from"`
+	Content   string    `json:"content"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // Participant interface for different AI models
